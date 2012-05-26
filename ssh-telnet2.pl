@@ -44,7 +44,7 @@ if (!$pmt) {
 login($username, $password, $host, $prompt);
 send_cmd("$command");
 logout();
-
+exit 0;
 
 
 sub send_cmd {
@@ -79,7 +79,7 @@ sub login {
                             -telnetmode => 0,
                        -cmd_remove_mode => 1,
                -output_record_separator => "\r",
-                               -timeout => 20,
+                               -timeout => 60,
                               );
         if ($debug) { $ssh->dump_log("errlog.txt") }
 
