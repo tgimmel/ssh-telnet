@@ -94,6 +94,14 @@ sub login {
         return 1;
 }
 
+#Tims-MacBook:~ tim$ssh tjg@172.20.13.134
+#The authenticity of host '172.20.13.134 (172.20.13.134)' can't be established.
+#RSA key fingerprint is 21:9a:8d:b4:50:61:55:3f:f7:99:fd:0f:c8:d8:aa:ac.
+#Are you sure you want to continue connecting (yes/no)? yes
+#Warning: Permanently added '172.20.13.134' (RSA) to the list of known hosts.
+
+
+
     sub _spawn {
         my(@cmd) = @_;
         my($pid, $pty, $tty, $tty_fd);
