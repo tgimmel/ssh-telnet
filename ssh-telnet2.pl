@@ -9,7 +9,7 @@ my ($username, $password, $host, $cmd, @output, $line, $debug, $prompt, $pmt);
 my ($pty, $ssh, @lines, $command);
 our ($opt_u, $opt_p, $opt_t, $opt_h, $opt_d);
 
-($username, $password, $host) = qw(admin admin1 172.16.9.13); #Default un, password
+($username, $password, $host) = qw(admin xxxxxx 172.16.9.13); #Default un, password
 getopts('u:p:t:c:dh:');
 if ($opt_u) { $username = $opt_u }
 if ($opt_p) { $password = $opt_p }
