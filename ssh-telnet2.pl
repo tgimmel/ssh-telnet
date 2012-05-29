@@ -9,7 +9,7 @@ my ($username, $password, $host, $cmd, @output, $line, $debug, $prompt, $pmt);
 my ($pty, $ssh, @lines, $command);
 our ($opt_u, $opt_p, $opt_t, $opt_h, $opt_d);
 
-($username, $password, $host) = qw(admin admin1 172.16.9.13); #Default un, password
+($username, $password, $host) = qw(admin xxxxxx 172.16.9.13); #Default un, password
 getopts('u:p:t:c:dh:');
 if ($opt_u) { $username = $opt_u }
 if ($opt_p) { $password = $opt_p }
@@ -44,16 +44,16 @@ if (!$pmt) {
 login($username, $password, $host, $prompt);
 send_cmd("$command");
 logout();
-exit 0;
+exit 1;
 
 
 sub send_cmd {
     my $cmd = shift;
-    my $response = $ssh->cmd('environment no more');
-        unless ($response) {print "Command failed!\n"; return undef; }
+    my $response = $ssh->cmd("environment no more");
+        unless ($response) {print "Command failed!\n"; return 0; }
     ## Send command, get and print its output.
-    my @lines = $ssh->cmd("$cmd");
-    print @lines;
+    my @lines = $ssh->cmd("$cmd");      #This needs some more
+    print @lines;                       #Error checking
     $ssh->cmd('exit all');
     return @lines;
 }
@@ -79,28 +79,34 @@ sub login {
                             -telnetmode => 0,
                        -cmd_remove_mode => 1,
                -output_record_separator => "\r",
-                               -timeout => 60,
+                               -timeout => 30,
                               );
         if ($debug) { $ssh->dump_log("errlog.txt") }
 
         ## Login to remote host.
-        $ssh->waitfor(-match => '/password: ?$/i',
-                      -errmode => "return")
-            or die "problem connecting to host: ", $ssh->lastline;
-        $ssh->print($pass);
-        $ssh->waitfor(-match => $ssh->prompt,
-                      -errmode => "return")
+        my ($preok, $ok) = $ssh->waitfor(-match => '/password: ?$/i',                     #Checking for 2 conditions
+                                         -match => '/.*continue connecting (yes\/no)?/i', #Either a straight password prompt
+                                       -errmode => "return")                              # or if never connected answer 'yes' to
+            or die "problem connecting to host: ", $ssh->lastline;                        #SSH's question.
+            
+        if ($ok =~ /.*continue connecting (yes\/no)?/i) {                                 #If we got this the
+            $ssh->print("yes\n");                                                         #SSH question must be answered
+            print STDERR "First time logging into this host, saying yes!\n";
+            $ssh->waitfor(-match => '/password: ?$/i',                                    #Wait for password prmpt
+                        -errmode => "return")
+            or die "No prompt from from host: ", $ssh->lastline;
+            $ssh->print($pass);
+            $ssh->waitfor(-match => $ssh->prompt,                                         #Wait for the regular prompt
+                        -errmode => "return")
+            or die "No prompt from host: ", $ssh->lastline;
+        } elsif ($ok =~ /password: ?$/i) {                                  #This is normal processing
+            $ssh->print($pass);
+            $ssh->waitfor(-match => $ssh->prompt,
+                        -errmode => "return")
             or die "login failed: ", $ssh->lastline;
+        }
         return 1;
 }
-
-#Tims-MacBook:~ tim$ssh tjg@172.20.13.134
-#The authenticity of host '172.20.13.134 (172.20.13.134)' can't be established.
-#RSA key fingerprint is 21:9a:8d:b4:50:61:55:3f:f7:99:fd:0f:c8:d8:aa:ac.
-#Are you sure you want to continue connecting (yes/no)? yes
-#Warning: Permanently added '172.20.13.134' (RSA) to the list of known hosts.
-
-
 
     sub _spawn {
         my(@cmd) = @_;
@@ -139,7 +145,7 @@ sub login {
     } # end sub spawn
     
 sub usage {
-    print "usage: ssh-telnet.pl [-d -u <username> -p <password> -h <hostname or ip> -t <1-2> ] <command> \n";
+    print "usage: ssh-telnet.pl [-d -u <username> -p <password> -h <hostname or ip> -t [1|2] ] <command> \n";
     print "--help  This help\n";
     print "-u  username\n";
     print "-p  password\n";
