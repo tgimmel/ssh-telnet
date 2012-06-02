@@ -79,7 +79,7 @@ sub login {
                             -telnetmode => 0,
                        -cmd_remove_mode => 1,
                -output_record_separator => "\r",
-                               -timeout => 30,
+                               -timeout => 60,
                               );
         if ($debug) { $ssh->dump_log("errlog.txt") }
 
