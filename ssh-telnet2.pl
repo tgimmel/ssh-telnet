@@ -81,6 +81,8 @@ sub login {
                -output_record_separator => "\r",
                                -timeout => 60,
                               );
+        $ssh->max_buffer_length(4194304);
+        if ($debug) { print "DEBUG: max_buffer_length = " . $ssh->max_buffer_length; }
         if ($debug) { $ssh->dump_log("errlog.txt") }
 
         ## Login to remote host.
